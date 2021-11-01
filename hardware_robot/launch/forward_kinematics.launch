@@ -1,0 +1,6 @@
+<launch>
+
+<node name="dynamixel_control_node" pkg="dynamixel_control" type="dynamixel_control_node.py" output="screen"/>
+<node name="forward_kineamtics_node" pkg="hardware_robot" type="forward_kinematics.py" output="screen"/>
+  
+</launch>

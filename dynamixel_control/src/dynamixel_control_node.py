@@ -29,7 +29,7 @@ TORQUE_DISABLE = 0
 rospy.init_node('dynamixel_control_node')
 
 BAUDRATE = rospy.get_param("~dynamixel_baudrate", 57600)
-DEVICENAME = rospy.get_param("~dynamixel_device", "/dev/ttyUSB0")
+DEVICENAME = rospy.get_param("~dynamixel_device", "/dev/ttyACM0")
 PROTOCOL_VERSION1 = rospy.get_param("~dynamixel_protocol", 1.0)
 PROTOCOL_VERSION2 = rospy.get_param("~dynamixel_protocol", 2.0)
 
@@ -86,18 +86,19 @@ def setPositionHandler(data):
     for dxl in data.dynamixel:
         #DYNAMIXEL AX12 PROTOCOL1
         if dxl.id == 5:
-            pwm = dxl.position * 1023 / 300 
-            data_send = list(struct.unpack('4B', struct.pack("I", limitCheck(dxl.id, pwm))))
+            pwm = dxl.position * 1023.0 / 300.0 
+            data_send = list(struct.unpack('4B', struct.pack("I", limitCheck(dxl.id, int(pwm)))))
             dxl_addparam_result = PosSyncWrite1.addParam(dxl.id, data_send)
             if dxl_addparam_result != True:
                 rospy.logerr(f"[ID:{dxl.id}] GroupSyncWrite addparam failed" % dxl.id)
         
         #DYNAMIXEL MX AND X SERIES PROTOCOL2 
-        pwm = dxl.position * 4095 / 360 
-        data_send = list(struct.unpack('4B', struct.pack("I", limitCheck(dxl.id, pwm))))
-        dxl_addparam_result = PosSyncWrite2.addParam(dxl.id, data_send)
-        if dxl_addparam_result != True:
-            rospy.logerr(f"[ID:{dxl.id}] GroupSyncWrite addparam failed" % dxl.id)
+        else:
+            pwm = dxl.position * 4095.0 / 360.0 
+            data_send = list(struct.unpack('4B', struct.pack("I", limitCheck(dxl.id, int(pwm)))))
+            dxl_addparam_result = PosSyncWrite2.addParam(dxl.id, data_send)
+            if dxl_addparam_result != True:
+                rospy.logerr(f"[ID:{dxl.id}] GroupSyncWrite addparam failed" % dxl.id)
 
     dxl_comm_result1 = PosSyncWrite1.txPacket()
     dxl_comm_result2 = PosSyncWrite2.txPacket()
@@ -149,7 +150,7 @@ if __name__ == '__main__':
             pass
 
     rospy.Subscriber('set_position', DynamixelPosList, setPositionHandler)
-    rospy.Subscriber('en_torque', Bool, enTorqueHandler)
+    # rospy.Subscriber('en_torque', Bool, enTorqueHandler)
     rospy.on_shutdown(onShutdown)
 
     config.read(configFile)
