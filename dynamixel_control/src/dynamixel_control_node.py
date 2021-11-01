@@ -54,7 +54,7 @@ def init():
         rospy.logwarn(f"[ID:{DXL_ID1}] {packetHandler1.getRxPacketError(dxl_error)}")
     
     #PROTOCOL 2
-    for DXL_ID2 in range(1,4):
+    for DXL_ID2 in range(1,5):
         dxl_comm_result, dxl_error = packetHandler2.write1Bytedxl_comm_result, dxl_error = packetHandler2.write1ByteTxRx(portHandler, DXL_ID2, ADDR_PRO_TORQUE_ENABLE2, TORQUE_ENABLE)
         if dxl_comm_result != COMM_SUCCESS:
             rospy.logwarn(f"[ID:{DXL_ID2}] {packetHandler2.getTxRxResult(dxl_comm_result)}")
@@ -72,7 +72,7 @@ def enTorqueHandler(data):
         rospy.logwarn(f"[ID:{DXL_ID1}] {packetHandler1.getRxPacketError(dxl_error)}")
     
     #PROTOCOL 2
-    for DXL_ID2 in range(1, 4):
+    for DXL_ID2 in range(1, 5):
         dxl_comm_result, dxl_error = packetHandler2.write1ByteTxRx(portHandler, DXL_ID2, ADDR_PRO_TORQUE_ENABLE2, int(data.data))
         if dxl_comm_result != COMM_SUCCESS:
             rospy.logwarn(f"[ID:{DXL_ID2}] {packetHandler2.getTxRxResult(dxl_comm_result)}")
@@ -86,28 +86,30 @@ def setPositionHandler(data):
     for dxl in data.dynamixel:
         #DYNAMIXEL AX12 PROTOCOL1
         if dxl.id == 5:
-            pwm = dxl.position * 1023.0 / 300.0 
-            data_send = list(struct.unpack('4B', struct.pack("I", limitCheck(dxl.id, int(pwm)))))
-            dxl_addparam_result = PosSyncWrite1.addParam(dxl.id, data_send)
-            if dxl_addparam_result != True:
-                rospy.logerr(f"[ID:{dxl.id}] GroupSyncWrite addparam failed" % dxl.id)
+            # Write Dynamixel#1 goal position
+            pwm = int(dxl.position * 1023.0 / 300.0) 
+            dxl_comm_result, dxl_error = packetHandler1.write4ByteTxRx(portHandler, DXL_ID1, ADDR_PRO_GOAL_POSITION1, pwm)
+            if dxl_comm_result != COMM_SUCCESS:
+                print("%s" % packetHandler1.getTxRxResult(dxl_comm_result))
+            elif dxl_error != 0:
+                print("%s" % packetHandler1.getRxPacketError(dxl_error))
         
-        #DYNAMIXEL MX AND X SERIES PROTOCOL2 
+        #DYNAMIXEL MX AND X SERIES PROTargs="-d $(find urdf_manipulator)/urdf.rviz" />OCOL2 
         else:
             pwm = dxl.position * 4095.0 / 360.0 
             data_send = list(struct.unpack('4B', struct.pack("I", limitCheck(dxl.id, int(pwm)))))
             dxl_addparam_result = PosSyncWrite2.addParam(dxl.id, data_send)
             if dxl_addparam_result != True:
-                rospy.logerr(f"[ID:{dxl.id}] GroupSyncWrite addparam failed" % dxl.id)
+                rospy.logerr(f"[ID:{dxl.id}] GroupSyncWrite addparam failed")
 
-    dxl_comm_result1 = PosSyncWrite1.txPacket()
+    # dxl_comm_result1 = PosSyncWrite1.txPacket()
     dxl_comm_result2 = PosSyncWrite2.txPacket()
-    if dxl_comm_result1 != COMM_SUCCESS:
-        rospy.logerr(f"{packetHandler1.getTxRxResult(dxl_comm_result1)}" )
-    if dxl_comm_result1 != COMM_SUCCESS:
+    # if dxl_comm_result1 != COMM_SUCCESS:
+    #     rospy.logerr(f"{packetHandler1.getTxRxResult(dxl_comm_result1)}" )
+    if dxl_comm_result2 != COMM_SUCCESS:
         rospy.logerr(f"{packetHandler2.getTxRxResult(dxl_comm_result2)}" )
 
-    PosSyncWrite1.clearParam()
+    # PosSyncWrite1.clearParam()
     PosSyncWrite2.clearParam()
 
 def limitCheck(id, pwm):

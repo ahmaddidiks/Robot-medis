@@ -1,6 +1,6 @@
 <launch>
 
-  <include file="$(find urdf_arm_manipulator)/launch/display.launch" />
+  <include file="$(find urdf_manipulator)/launch/display.launch" />
   <include file="$(find hardware_robot)/launch/forward_kinematics.launch" />
   
 </launch>
