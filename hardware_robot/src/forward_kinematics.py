@@ -17,7 +17,10 @@ def fk(joint):
         pos = DynamixelPos()
         pos.id = id
         id +=1
-        pos.position = int(p+180) #manipulasi dengan menambah 180 deg
+        if id == 6: #gripper DXL_ID5
+            pos.position = int(p)
+        else:
+            pos.position = int(p+180) #manipulasi dengan menambah 180 deg
         data_pub.dynamixel.append(pos)
     
     dynamixelPosList_pub.publish(data_pub)

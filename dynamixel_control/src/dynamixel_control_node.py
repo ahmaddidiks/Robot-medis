@@ -28,9 +28,9 @@ TORQUE_DISABLE = 0
 
 rospy.init_node('dynamixel_control_node')
 
-BAUDRATE = rospy.get_param("~dynamixel_baudrate", 57600)
+BAUDRATE = rospy.get_param("~dynamixel_baudrate", 1000000)
 DEVICENAME = rospy.get_param("~dynamixel_device", "/dev/ttyACM0")
-PROTOCOL_VERSION1 = rospy.get_param("~dynamixel_protocol", 1.0)
+PROTOCOL_VERSION1 = 1#rospy.get_param("~dynamixel_protocol", 1.0)
 PROTOCOL_VERSION2 = rospy.get_param("~dynamixel_protocol", 2.0)
 
 portHandler = PortHandler(DEVICENAME)
@@ -80,19 +80,21 @@ def enTorqueHandler(data):
             rospy.logwarn(f"[ID:{DXL_ID2}] {packetHandler2.getRxPacketError(dxl_error)}")
 
 def setPositionHandler(data):
-    #PROTOCOL1
 
-    #PROTOCOL2
     for dxl in data.dynamixel:
         #DYNAMIXEL AX12 PROTOCOL1
         if dxl.id == 5:
-            # Write Dynamixel#1 goal position
-            pwm = int(dxl.position * 1023.0 / 300.0) 
+            #limit gripper deg = 160
+            if dxl.position > 160:
+                dxl.position = 160
+            else:
+                dxl.position = dxl.position
+            pwm = int(dxl.position * 1023.0 / 300.0)
             dxl_comm_result, dxl_error = packetHandler1.write4ByteTxRx(portHandler, DXL_ID1, ADDR_PRO_GOAL_POSITION1, pwm)
             if dxl_comm_result != COMM_SUCCESS:
-                print("%s" % packetHandler1.getTxRxResult(dxl_comm_result))
+                print(f"{packetHandler1.getTxRxResult(dxl_comm_result)}")
             elif dxl_error != 0:
-                print("%s" % packetHandler1.getRxPacketError(dxl_error))
+                print(f"{packetHandler1.getRxPacketError(dxl_error)}")
         
         #DYNAMIXEL MX AND X SERIES PROTargs="-d $(find urdf_manipulator)/urdf.rviz" />OCOL2 
         else:
@@ -126,7 +128,7 @@ def onShutdown():
     #PROTOCOL1
     dxl_comm_result, dxl_error = packetHandler1.write1ByteTxRx(portHandler, DXL_ID1, ADDR_PRO_TORQUE_ENABLE1, TORQUE_DISABLE)
     #PROTOCOL2
-    for DXL_ID2 in range(1, 4):
+    for DXL_ID2 in range(1, 5):
         dxl_comm_result, dxl_error = packetHandler2.write1ByteTxRx(portHandler, DXL_ID2, ADDR_PRO_TORQUE_ENABLE2, TORQUE_DISABLE)
 
     portHandler.closePort()
