@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: robot_description
+    relative_path: urdf/urdf_manipulator.urdf
+    xacro_args: ""
+  SRDF:
+    relative_path: config/manipulator.srdf
+  CONFIG:
+    author_name: Didik
+    author_email: didik@student.undip.ac.id
+    generated_timestamp: 1648104960
