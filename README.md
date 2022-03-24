@@ -17,7 +17,6 @@ mkdir robot_medis_ws
 cd robot_medis_ws
 git clone https://github.com/ahmaddidiks/Robot-medis.git
 mv Robot-medis src
-cd ..
 catkin_make
 ```
 
